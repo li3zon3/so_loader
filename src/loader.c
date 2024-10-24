@@ -58,7 +58,6 @@ static unsigned long loadelf_anon(int fd, Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 
 	minva = TRUNC_PG(minva);
 	maxva = ROUND_PG(maxva);
-
 	/* For dynamic ELF let the kernel chose the address. */	
 	hint = dyn ? NULL : (void *)minva;
 	flags = dyn ? 0 : MAP_FIXED;
@@ -88,10 +87,12 @@ static unsigned long loadelf_anon(int fd, Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 			goto err;
 		if (z_read(fd, p + off, iter->p_filesz) !=
 				(ssize_t)iter->p_filesz)
-			goto err;
+			{
+			z_printf("%x\n%x\n%x\n", fd, p+off, iter->p_filesz);
+			goto err;}
 		z_mprotect(p, sz, PFLAGS(iter->p_flags));
 	}
-
+	
 	return (unsigned long)base;
 err:
 	z_munmap(base, maxva - minva);
@@ -168,7 +169,7 @@ void exec_elf(const char *file, int argc, char *argv[])
 	av = (void *)p;
 
 	(void)env;
-
+	
 	for (i = 0;; i++, ehdr++) {
 		/* Open file, read and than check ELF header.*/
 		if ((fd = z_open(file, O_RDONLY)) < 0)
@@ -177,7 +178,6 @@ void exec_elf(const char *file, int argc, char *argv[])
 			z_errx(1, "can't read ELF header %s", file);
 		if (!check_ehdr(ehdr))
 			z_errx(1, "bogus ELF header %s", file);
-
 		/* Read the program header. */
 		sz = ehdr->e_phnum * sizeof(Elf_Phdr);
 		phdr = z_alloca(sz);
@@ -186,9 +186,10 @@ void exec_elf(const char *file, int argc, char *argv[])
 		if (z_read(fd, phdr, sz) != sz)
 			z_errx(1, "can't read program header %s", file);
 		/* Time to load ELF. */
-		if ((base[i] = loadelf_anon(fd, ehdr, phdr)) == LOAD_ERR)
+		if ((base[i] = loadelf_anon(fd, ehdr, phdr)) == LOAD_ERR) {
 			z_errx(1, "can't load ELF %s", file);
-
+		}
+		
 		/* Set the entry point, if the file is dynamic than add bias. */
 		entry[i] = ehdr->e_entry + (ehdr->e_type == ET_DYN ? base[i] : 0);
 		/* The second round, we've loaded ELF interp. */

@@ -1,3 +1,4 @@
+#if !STDLIB
 	.text
 	.align	4
 	.globl	z_syscall
@@ -13,4 +14,4 @@ z_syscall:
 	mov	x6,	x7
 	svc	0x0
 	ret
-
+#endif

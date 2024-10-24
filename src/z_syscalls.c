@@ -50,7 +50,7 @@ DEF_SYSCALL3(int, mprotect, void *, addr, size_t, length, int, prot)
 void *
 z_mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
-#if defined(__i386__)
+#if defined(__i386__) || defined(__arm__)
 	/* i386 has old_mmap and mmap2, old_map is a legacy single arg
 	 * function, use mmap2 but it needs offset in page units. */
 	offset = (unsigned long long)offset >> 12;

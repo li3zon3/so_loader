@@ -1,6 +1,6 @@
 # make ARCH=i386 SMALL=1 DEBUG=1
 
-ARCH ?= amd64
+ARCH ?= arm
 STDLIB = 1
 SMALL = 0
 DEBUG = 0
@@ -9,15 +9,16 @@ ARCHS32 := i386 arm
 ARCHS64 := amd64 aarch64
 ARCHS := $(ARCHS32) $(ARCHS64)
 
+CC = arm-linux-gnueabihf-gcc
 CFLAGS_i386 = -m32
 
-CFLAGS += -pipe -Wall -Wextra -fPIC -fno-ident -fno-stack-protector -U _FORTIFY_SOURCE
+CFLAGS += -pipe -Wall -Wextra -fPIC -fno-ident -fno-stack-protector -U _FORTIFY_SOURCE -static
 CFLAGS += -DSTDLIB=$(STDLIB)
 ifeq "$(STDLIB)" "0"
 #LDFLAGS += -nostartfiles -nodefaultlibs -nostdlib
-LDFLAGS += -nostartfiles -e z_start
+LDFLAGS += -nostartfiles -e z_start -z noexecstack
 endif
-LDFLAGS += -pie -Wl,-Bsymbolic,--no-undefined,--build-id=none
+LDFLAGS += -pie -Wl,-Bsymbolic,--no-undefined,--build-id=none -z noexecstack
 TARGET := loader foreign_dlopen_demo
 
 ifeq "$(filter $(ARCH),$(ARCHS))" ""
@@ -38,7 +39,7 @@ ifeq "$(DEBUG)" "1"
 else
   CFLAGS += -fvisibility=hidden
   # Disable unwind info to make prog smaller.
-  CFLAGS += -Os -fno-asynchronous-unwind-tables -fno-unwind-tables
+  CFLAGS += -Os -fno-asynchronous-unwind-tables -fno-unwind-tables 
   LDFLAGS += -s
 endif
 
