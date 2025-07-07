@@ -9,7 +9,20 @@ ARCHS32 := i386 arm
 ARCHS64 := amd64 aarch64
 ARCHS := $(ARCHS32) $(ARCHS64)
 
+# Default compiler (for arm)
 CC = arm-linux-gnueabihf-gcc
+
+# Architecture-specific compilers
+CC_i386 = gcc
+CC_arm = arm-linux-gnueabihf-gcc
+CC_amd64 = gcc
+CC_aarch64 = aarch64-linux-gnu-gcc
+
+# Use architecture-specific compiler if available
+ifneq ($(CC_$(ARCH)),)
+  CC = $(CC_$(ARCH))
+endif
+
 CFLAGS_i386 = -m32
 
 CFLAGS += -pipe -Wall -Wextra -fPIC -fno-ident -fno-stack-protector -U _FORTIFY_SOURCE -static

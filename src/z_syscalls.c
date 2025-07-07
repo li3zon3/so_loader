@@ -5,6 +5,11 @@
 
 #if !STDLIB
 
+// For aarch64 openat syscall
+#ifndef AT_FDCWD
+#define AT_FDCWD -100
+#endif
+
 static int errno;
 
 int *z_perrno(void)
@@ -38,7 +43,15 @@ ret z_##name(t1 a1, t2 a2, t3 a3) \
 	return (ret)SYSCALL(name, a1, a2, a3); \
 }
 
+// For aarch64, use openat instead of open
+#ifdef __aarch64__
+int z_open(const char *filename, int flags)
+{
+	return (int)SYSCALL(openat, AT_FDCWD, filename, flags);
+}
+#else
 DEF_SYSCALL2(int, open, const char *, filename, int, flags)
+#endif
 DEF_SYSCALL3(ssize_t, read, int, fd, void *, buf, size_t, count)
 DEF_SYSCALL3(ssize_t, write, int, fd, const void *, buf, size_t, count)
 DEF_SYSCALL1(int, close, int, fd)
